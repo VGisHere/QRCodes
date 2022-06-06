@@ -82,6 +82,8 @@ def QRCodeProperties():
         self.img_type       =   ''
         
 
+clr_hex_to_tuple = lambda x : (int(x[:2],16),int(x[2:4],16),int(x[4:],16))
+
 def main(vCardProp: vCardProperties, QRProp: QRCodeProperties, outfile: str):
     
     if QRProp.logo_path:
@@ -132,6 +134,21 @@ def main(vCardProp: vCardProperties, QRProp: QRCodeProperties, outfile: str):
                 'Image'                : ImageColorMask
             }
     
+    fgclr       =   clr_hex_to_tuple(QRProp.fgcolor)
+    bgclr       =   clr_hex_to_tuple(QRProp.bgcolor)
+    strtclr     =   clr_hex_to_tuple(QRProp.stcolor)
+    endclr      =   clr_hex_to_tuple(QRProp.endcolor)
+
+    clr_msk_prms =  {
+                'SolidFill'             : dict(back_color = bgclr, front_color = fgclr),
+                'RadialGradiant'        : dict(back_color = bgclr, center_color= strtclr, edge_color  = endclr),
+                'SquareGradiant'        : dict(back_color = bgclr, center_color= strtclr, edge_color  = endclr),
+                'HorizontalGradiant'    : dict(back_color = bgclr, left_color  = strtclr, right_color = endclr),
+                'VerticalGradiant'      : dict(back_color = bgclr, top_color   = strtclr, bottom_color= endclr),
+                
+                'Image'                 : dict(back_color = bgclr, color_mask_path=None, color_mask_image=None)
+                        }
+
     mdl_drwr = {
                 'Square'            : SquareModuleDrawer,
                 'GappedSquare'      : GappedSquareModuleDrawer,
@@ -144,7 +161,7 @@ def main(vCardProp: vCardProperties, QRProp: QRCodeProperties, outfile: str):
     QRimg = QRcode.make_image(fill_color = QRProp.fgcolor, back_color=QRProp.bgcolor,
                            image_factory = img_fctry[QRProp.img_type], 
                            module_drawer = mdl_drwr[QRProp.shape](),
-                           color_mask    = clr_msk[QRProp.color_mask](top_color = (255,0,255), bottom_color = (0,255,255))
+                           color_mask=clr_msk[QRProp.color_mask](**clr_msk_prms[QRProp.color_mask])
                          ).convert('RGB')
     
     if QRProp.logo_path:
@@ -198,8 +215,8 @@ if __name__ == 'main':
     # PymagingImage : PNG without QR customisations
     # StyledPIL     : PNG with QR customisations
     
-    parser.add_argument('-edgclr',  '--edge_color',         default='#000000',    help='Edge Color for Radial Gradient')
-    parser.add_argument('-cntclr',  '--center_color',       default='#000000',    help='Center Color for Radial Gradient')
+    # parser.add_argument('-edgclr',  '--edge_color',         default='#000000',    help='Edge Color for Radial Gradient')
+    # parser.add_argument('-cntclr',  '--center_color',       default='#000000',    help='Center Color for Radial Gradient')
     parser.add_argument('-strtclr', '--start_color',        default='#000000',    help='Start Color for Horizontal/Vertical Gradient')
     parser.add_argument('-endclr',  '--end_color',          default='#000000',    help='End Color for Horizontal/Vertical Gradient')
     
@@ -229,8 +246,8 @@ if __name__ == 'main':
     qr_prop             = QRCodeProperties()
     qr_prop.bgcolor     = args.bg
     qr_prop.fgcolor     = args.fg
-    qr_prop.edcolor     = args.edgclr
-    qr_prop.ctcolor     = args.cntclr
+    # qr_prop.edcolor     = args.edgclr
+    # qr_prop.ctcolor     = args.cntclr
     qr_prop.stcolor     = args.strtclr
     qr_prop.endcolor    = args.endclr
         
